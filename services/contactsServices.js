@@ -2,49 +2,40 @@ import fs from "fs/promises";
 import path from "path";
 import { nanoid } from "nanoid";
 
+import { Contact } from "../models/contact.js";
+
 const contactsPath = path.join("db", "contacts.json");
 
 export async function listContacts() {
-  const allContacts = await fs.readFile(contactsPath, "utf-8");
-  return JSON.parse(allContacts);
+  const allContacts = await Contact.find();
+  return allContacts;
 }
 
 export async function getContactById(contactId) {
-  const allContacts = await listContacts();
-  const contact = allContacts.find(({ id }) => contactId === id);
-
-  return contact || null;
+  const contact = Contact.findOne({ _id: contactId });
+  return contact;
 }
 
 export async function removeContact(contactId) {
-  const allContacts = await listContacts();
-  const index = allContacts.findIndex(({ id }) => contactId === id);
-  if (index === -1) return null;
-
-  const removedContact = allContacts.splice(index, 1)[0];
-  await fs.writeFile(contactsPath, JSON.stringify(allContacts, null, 2));
-  return removedContact;
+  const result = await Contact.findOneAndDelete({ _id: contactId });
+  return result;
 }
 
-export async function addContact({ name, email, phone }) {
-  const newContact = { name, email, phone, id: nanoid() };
-  const allContacts = await listContacts();
-  allContacts.push(newContact);
-
-  await fs.writeFile(contactsPath, JSON.stringify(allContacts, null, 2));
-
-  return newContact;
+export async function addContact(newContact) {
+  const result = await Contact.create(newContact);
+  return result;
 }
 
 export async function updateContactById(contactId, body) {
-  const contacts = await listContacts();
-  const index = contacts.findIndex((contact) => contact.id === contactId);
+  const result = await Contact.findOneAndUpdate({ _id: contactId }, body, {
+    new: true,
+  });
+  return result;
+}
 
-  if (index === -1) {
-    return null;
-  }
-
-  contacts[index] = { id: contactId, ...body };
-  await fs.writeFile(contactsPath, JSON.stringify(contacts, null, 2));
-  return contacts[index];
+export async function updateStatusContactById(contactId, body) {
+  const result = await Contact.findOneAndUpdate({ _id: contactId }, body, {
+    new: true,
+  });
+  return result;
 }
