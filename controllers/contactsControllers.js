@@ -10,13 +10,15 @@ import HttpError from "../helpers/HttpError.js";
 import { ctrlWrapper } from "../helpers/ctrlWrapper.js";
 
 const getAllContacts = async (req, res) => {
-  const result = await listContacts();
+  const owner = req.user._id;
+  const result = await listContacts({ owner });
   res.json(result);
 };
 
 const getOneContact = async (req, res) => {
   const { id } = req.params;
-  const result = await getContactById(id);
+  const owner = req.user._id;
+  const result = await getContactById({ _id: id, owner });
   if (!result) {
     throw HttpError(404, "Not found");
   }
@@ -26,7 +28,8 @@ const getOneContact = async (req, res) => {
 
 const deleteContact = async (req, res) => {
   const { id } = req.params;
-  const result = await removeContact(id);
+  const owner = req.user._id;
+  const result = await removeContact({ _id: id, owner });
 
   if (!result) {
     throw HttpError(404, "Not Found");
@@ -36,18 +39,21 @@ const deleteContact = async (req, res) => {
 };
 
 const createContact = async (req, res) => {
-  const result = await addContact(req.body);
+  const owner = req.user._id;
+  const body = req.body;
+  const result = await addContact({ body, owner });
   res.status(201).json(result);
 };
 
 const updateContact = async (req, res) => {
-  const { id } = req.params;
+  const { id: _id } = req.params;
   const body = req.body;
+  const owner = req.user._id;
   if (!Object.keys(body).length) {
     throw HttpError(400, "Body must have at least one field");
   }
 
-  const result = await updateContactById(id, body);
+  const result = await updateContactById({ _id, body, owner });
   if (!result) {
     throw HttpError(404, "Not found");
   }
@@ -56,10 +62,10 @@ const updateContact = async (req, res) => {
 };
 
 const updateStatusContact = async (req, res) => {
-  const { id } = req.params;
+  const { id: _id } = req.params;
   const body = req.body;
-
-  const result = await updateStatusContactById(id, body);
+  const owner = req.user._id;
+  const result = await updateStatusContactById({ _id, body, owner });
   if (!result) {
     throw HttpError(404, "Not found");
   }

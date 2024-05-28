@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 
 import app from "./app.js";
-import { getValueEnv } from "./helpers/env.js";
+import { getValueEnv } from "./helpers/getValueEnv.js";
 
 mongoose
   .connect(getValueEnv("DB_HOST"))
