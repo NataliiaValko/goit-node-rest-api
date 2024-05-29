@@ -25,9 +25,12 @@ export async function login({ email, password }) {
   const token = jwt.sign(payload, getValueEnv("SECRET_KEY"), {
     expiresIn: "23h",
   });
-  await User.findOneAndUpdate({ _id: user._id }, { token });
+  const { subscription } = await User.findOneAndUpdate(
+    { _id: user._id },
+    { token }
+  );
 
-  return token;
+  return { token, email, subscription };
 }
 
 export async function logout({ _id }) {

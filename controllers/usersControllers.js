@@ -13,10 +13,11 @@ const registerUser = async (req, res) => {
 };
 
 const loginUser = async (req, res) => {
-  const token = await login(req.body);
+  const { token, email, subscription } = await login(req.body);
 
   res.json({
     token,
+    user: { email, subscription },
   });
 };
 
