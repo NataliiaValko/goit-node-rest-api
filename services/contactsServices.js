@@ -26,10 +26,3 @@ export async function updateContactById({ _id, body, owner }) {
   });
   return result;
 }
-
-export async function updateStatusContactById({ _id, body, owner }) {
-  const result = await Contact.findOneAndUpdate({ _id, owner }, body, {
-    new: true,
-  });
-  return result;
-}

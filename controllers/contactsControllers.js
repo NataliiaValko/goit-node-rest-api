@@ -4,7 +4,6 @@ import {
   addContact,
   removeContact,
   updateContactById,
-  updateStatusContactById,
 } from "../services/contactsServices.js";
 import HttpError from "../helpers/HttpError.js";
 import { ctrlWrapper } from "../helpers/ctrlWrapper.js";
@@ -49,23 +48,8 @@ const updateContact = async (req, res) => {
   const { id: _id } = req.params;
   const body = req.body;
   const owner = req.user._id;
-  if (!Object.keys(body).length) {
-    throw HttpError(400, "Body must have at least one field");
-  }
 
   const result = await updateContactById({ _id, body, owner });
-  if (!result) {
-    throw HttpError(404, "Not found");
-  }
-
-  res.json(result);
-};
-
-const updateStatusContact = async (req, res) => {
-  const { id: _id } = req.params;
-  const body = req.body;
-  const owner = req.user._id;
-  const result = await updateStatusContactById({ _id, body, owner });
   if (!result) {
     throw HttpError(404, "Not found");
   }
@@ -78,4 +62,3 @@ export const getOneContactCtrl = ctrlWrapper(getOneContact);
 export const deleteContactCtrl = ctrlWrapper(deleteContact);
 export const createContactCtrl = ctrlWrapper(createContact);
 export const updateContactCtrl = ctrlWrapper(updateContact);
-export const updateStatusContactCtrl = ctrlWrapper(updateStatusContact);

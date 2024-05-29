@@ -6,7 +6,6 @@ import {
   deleteContactCtrl,
   createContactCtrl,
   updateContactCtrl,
-  updateStatusContactCtrl,
 } from "../controllers/contactsControllers.js";
 import validateBody from "../helpers/validateBody.js";
 import {
@@ -16,6 +15,7 @@ import {
 } from "../schemas/contactsSchemas.js";
 import { isValidId } from "../helpers/isValidId.js";
 import { authenticate } from "../middlewares/authenticate.js";
+import { checkEmptyBody } from "../middlewares/isEmptyBody.js";
 
 const contactsRouter = express.Router();
 
@@ -35,6 +35,7 @@ contactsRouter.post(
 contactsRouter.put(
   "/:id",
   authenticate,
+  checkEmptyBody,
   isValidId,
   validateBody(updateContactSchema),
   updateContactCtrl
@@ -45,7 +46,7 @@ contactsRouter.patch(
   authenticate,
   isValidId,
   validateBody(updateStatusFavoriteSchema),
-  updateStatusContactCtrl
+  updateContactCtrl
 );
 
 export default contactsRouter;
