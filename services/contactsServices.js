@@ -32,10 +32,3 @@ export async function updateContactById(contactId, body) {
   });
   return result;
 }
-
-export async function updateStatusContactById(contactId, body) {
-  const result = await Contact.findOneAndUpdate({ _id: contactId }, body, {
-    new: true,
-  });
-  return result;
-}
