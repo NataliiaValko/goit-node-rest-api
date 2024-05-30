@@ -1,16 +1,33 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import gravatar from "gravatar";
+import path from "path";
+import fs from "fs/promises";
+import Jimp from "jimp";
 
 import { User } from "../models/user.js";
 import HttpError from "../helpers/HttpError.js";
 import { getValueEnv } from "../helpers/getValueEnv.js";
+
+const avatarsPath = path.resolve("public", "avatars");
 
 export async function register(body) {
   const user = await User.findOne({ email: body.email });
   if (user) throw HttpError(409, "Email in use");
 
   const hashPassword = await bcrypt.hash(body.password, 10);
-  const newUser = await User.create({ ...body, password: hashPassword });
+
+  const avatarURL = gravatar.url(
+    { email: body.email },
+    { s: "250", d: "identicon" },
+    false
+  );
+
+  const newUser = await User.create({
+    ...body,
+    avatarURL,
+    password: hashPassword,
+  });
   return newUser;
 }
 
@@ -25,16 +42,45 @@ export async function login({ email, password }) {
   const token = jwt.sign(payload, getValueEnv("SECRET_KEY"), {
     expiresIn: "23h",
   });
-  const { subscription } = await User.findOneAndUpdate(
+  const { subscription, avatarURL } = await User.findOneAndUpdate(
     { _id: user._id },
     { token }
   );
 
-  return { token, email, subscription };
+  return { token, email, subscription, avatarURL };
 }
 
 export async function logout({ _id }) {
   await User.findOneAndUpdate({ _id }, { token: "" });
 
   return;
+}
+
+export async function updateAvatar({ _id, file }) {
+  if (!file) {
+    throw HttpError(400, "File not found");
+  }
+
+  const { path: oldPath, originalname, mimetype } = file;
+  if (
+    !["image/bmp", "image/jpeg", "image/png", "image/jpg"].includes(mimetype)
+  ) {
+    throw HttpError(400, "Unsupported file type");
+  }
+
+  const filename = `${_id}_${Date.now()}_${originalname}`;
+  const newPath = path.join(avatarsPath, filename);
+  const avatar = await Jimp.read(oldPath);
+  avatar.resize(250, 250).write(newPath);
+  fs.unlink(oldPath);
+  const newAvatarURL = path.resolve("avatars", filename);
+  const { avatarURL } = await User.findOneAndUpdate(
+    { _id },
+    { avatarURL: newAvatarURL },
+    {
+      new: true,
+    }
+  );
+
+  return avatarURL;
 }
