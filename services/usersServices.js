@@ -1,3 +1,4 @@
+import { nanoid } from "nanoid";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import gravatar from "gravatar";
@@ -23,17 +24,25 @@ export async function register(body) {
     false
   );
 
+  const verificationToken = nanoid();
+
   const newUser = await User.create({
     ...body,
     avatarURL,
     password: hashPassword,
+    verificationToken,
   });
+
   return newUser;
 }
 
 export async function login({ email, password }) {
   const user = await User.findOne({ email });
   if (!user) throw HttpError(401, "Email or password is wrong");
+
+  if (!user.verify) {
+    throw HttpError(401, "Email not verified");
+  }
 
   const passwordCompare = await bcrypt.compare(password, user.password);
   if (!passwordCompare) throw HttpError(401, "Email or password is wrong");
@@ -83,4 +92,32 @@ export async function updateAvatar({ _id, file }) {
   );
 
   return avatarURL;
+}
+
+export async function verifyEmail(verificationToken) {
+  const user = await User.findOne({ verificationToken });
+  if (!user) {
+    throw HttpError(404, "User not found");
+  }
+
+  await User.findByIdAndUpdate(user._id, {
+    verify: true,
+    verificationToken: null,
+  });
+
+  return;
+}
+
+export async function resendVerifyEmail({ email }) {
+  const user = await User.findOne({ email });
+  if (!user) {
+    throw HttpError(404, "User not found");
+  }
+
+  const { verify, verificationToken } = user;
+  if (verify) {
+    throw HttpError(400, "Verification has already been passed");
+  }
+
+  return { verificationToken };
 }
